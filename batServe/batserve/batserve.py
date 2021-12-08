@@ -1,6 +1,5 @@
 import rich
 
-
 def get_args():
     import argparse
 
@@ -51,6 +50,32 @@ def get_args():
 
     return args
 
+args = get_args()
+
+from gevent import monkey
+
+monkey.patch_all()
+
+import os
+import sys
+import glob
+import time
+import uuid
+import epyk
+import falcon
+import gevent
+import shutil
+import psutil
+import socket
+import logging
+import mimetypes
+import gunicorn.app.base
+from rich.logging import RichHandler
+
+logging.basicConfig(
+    level=logging.INFO, format="%(message)s", handlers=[RichHandler(markup=True)]
+)
+
 
 def start_cloudflared():
     pass
@@ -64,6 +89,7 @@ class fileServer(object):
         
     def on_get(self, req, resp):
         try:
+            logging.info(f"{req.remote_addr}, {req.relative_uri}")
             in_path = os.path.join(self.dir, req.relative_uri.strip().lstrip("/"))
 
             if os.path.isdir(in_path):
@@ -98,7 +124,7 @@ class fileServer(object):
             resp.status = falcon.HTTP_400
 
 
-def main(
+def _main(
     host="0.0.0.0",
     port=8080,
     public=False,
@@ -164,39 +190,9 @@ def main(
 
     StandaloneApplication(app, options).run()
 
-
-if __name__ == "__main__":
-    args = get_args()
-
-    from gevent import monkey
-
-    monkey.patch_all()
-
-    import os
-    import sys
-    import glob
-    import time
-    import uuid
-    import epyk
-    import gipc
-    import falcon
-    import gevent
-    import shutil
-    import psutil
-    import socket
-    import logging
-    import datetime
-    import mimetypes
-    import gunicorn.app.base
-    from rich.logging import RichHandler
-
-    logging.basicConfig(
-        level=logging.INFO, format="%(message)s", handlers=[RichHandler(markup=True)]
-    )
-
+def batserve():
     logging.info(f"[yellow]Starting[/yellow] batServe")
-
-    main(
+    _main(
         host=args.host if args.host else "0.0.0.0",
         port=int(args.port) if args.port and args.port.isdigit() else 8080,
         public=args.public,
@@ -206,3 +202,6 @@ if __name__ == "__main__":
         username=args.username,
         password=args.password,
     )
+
+if __name__ == "__main__":
+    main()    
