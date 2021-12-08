@@ -68,6 +68,7 @@ import shutil
 import psutil
 import socket
 import logging
+import tempfile
 import mimetypes
 import gunicorn.app.base
 from rich.logging import RichHandler
@@ -75,14 +76,6 @@ from rich.logging import RichHandler
 logging.basicConfig(
     level=logging.INFO, format="%(message)s", handlers=[RichHandler(markup=True)]
 )
-
-
-def start_cloudflared():
-    cur_path = os.path.dirname(os.path.realpath(__file__))
-    cloudflared_path = os.path.join(cur_path, "./binaries/cloudflared")
-    print('----======', cloudflared_path)
-    pass
-
 
 class fileServer(object):
     def __init__(self, dir, no_index, no_symlinks):
@@ -182,15 +175,27 @@ def _main(
         "loglevel": "ERROR",
     }
 
+    cloudflared_process = None
+    cloudflared_url = None
     if public:
-        start_cloudflared()
         # https://github.com/cloudflare/cloudflared/releases/latest/download/cloudflared-darwin-amd64.tgz
-        # cloudflared_process = gevent.subprocess.Popen(["./cloudflared tunnel --url localhost:8080 --logfile bbcc"], close_fds=True)
+        logging.info(f"Establishing tunnel")
+        with tempfile.NamedTemporaryFile() as tmp:
+            cloudflared_process = gevent.subprocess.Popen(["cloudflared", "tunnel", "--url", f"localhost:{port}", "--logfile", tmp.name], close_fds=True, stdin=gevent.subprocess.DEVNULL, stdout=gevent.subprocess.DEVNULL, stderr=gevent.subprocess.DEVNULL)
+            while True:
+                try:
+                    cloudflared_url = [_ for _ in open(tmp.name).read().split() if _.startswith("https://") and _.endswith(".trycloudflare.com")][0]
+                    break
+                except:
+                    pass
 
     for interface, snics in psutil.net_if_addrs().items():
         for snic in snics:
             if snic.family == socket.AF_INET:
                 rich.print(f"http://{snic.address}:{port}")
+    
+    if cloudflared_url:
+        rich.print(cloudflared_url)
 
     StandaloneApplication(app, options).run()
 
