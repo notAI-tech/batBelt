@@ -78,6 +78,9 @@ logging.basicConfig(
 
 
 def start_cloudflared():
+    cur_path = os.path.dirname(os.path.realpath(__file__))
+    cloudflared_path = os.path.join(cur_path, "./binaries/cloudflared")
+    print('----======', cloudflared_path)
     pass
 
 
@@ -180,8 +183,9 @@ def _main(
     }
 
     if public:
+        start_cloudflared()
         # https://github.com/cloudflare/cloudflared/releases/latest/download/cloudflared-darwin-amd64.tgz
-        cloudflared_process = gevent.subprocess.Popen(["./cloudflared tunnel --url localhost:8080 --logfile bbcc"], close_fds=True)
+        # cloudflared_process = gevent.subprocess.Popen(["./cloudflared tunnel --url localhost:8080 --logfile bbcc"], close_fds=True)
 
     for interface, snics in psutil.net_if_addrs().items():
         for snic in snics:
