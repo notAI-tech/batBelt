@@ -1,5 +1,6 @@
 import rich
 
+
 def get_args():
     import argparse
 
@@ -10,7 +11,11 @@ def get_args():
     parser = ArgumentParser(
         description="[green]batBelt[/green] file server - simple and useful file server"
     )
-    parser.add_argument("--host", help="Serve on host (eg: localhost, 0.0.0.0). Defaults to 0.0.0.0", nargs="?")
+    parser.add_argument(
+        "--host",
+        help="Serve on host (eg: localhost, 0.0.0.0). Defaults to 0.0.0.0",
+        nargs="?",
+    )
     parser.add_argument("--port", help="Serve on port. Defaults to 8080", nargs="?")
     parser.add_argument(
         "--public",
@@ -50,6 +55,7 @@ def get_args():
 
     return args
 
+
 args = get_args()
 
 from gevent import monkey
@@ -62,7 +68,9 @@ import glob
 import time
 import uuid
 import epyk
+import atexit
 import falcon
+import signal
 import gevent
 import shutil
 import psutil
@@ -77,12 +85,13 @@ logging.basicConfig(
     level=logging.INFO, format="%(message)s", handlers=[RichHandler(markup=True)]
 )
 
+
 class fileServer(object):
     def __init__(self, dir, no_index, no_symlinks):
         self.dir = dir
         self.no_index = no_index
         self.no_symlinks = no_symlinks
-        
+
     def on_get(self, req, resp):
         try:
             logging.info(f"{req.remote_addr}, {req.relative_uri}")
@@ -93,13 +102,15 @@ class fileServer(object):
                     resp.content_type = "text/html"
                     resp.stream = open(os.path.join(in_path, "index.html"), "rb")
                 elif self.no_index:
-                    resp.media = "inde.html doesn't exist and auto-generation is disabled"
+                    resp.media = (
+                        "inde.html doesn't exist and auto-generation is disabled"
+                    )
                     resp.status = falcon.HTTP_404
                 else:
                     # index_page = epyk.Page()
-                    for f in glob.iglob(os.path.join(in_path, '*')):
+                    for f in glob.iglob(os.path.join(in_path, "*")):
                         pass
-                    resp.media = glob.glob(os.path.join(in_path, '*'))
+                    resp.media = glob.glob(os.path.join(in_path, "*"))
 
             else:
                 if not os.path.exists(in_path):
@@ -181,10 +192,27 @@ def _main(
         # https://github.com/cloudflare/cloudflared/releases/latest/download/cloudflared-darwin-amd64.tgz
         logging.info(f"Establishing tunnel")
         with tempfile.NamedTemporaryFile() as tmp:
-            cloudflared_process = gevent.subprocess.Popen(["cloudflared", "tunnel", "--url", f"localhost:{port}", "--logfile", tmp.name], close_fds=True, stdin=gevent.subprocess.DEVNULL, stdout=gevent.subprocess.DEVNULL, stderr=gevent.subprocess.DEVNULL)
+            cloudflared_process = gevent.subprocess.Popen(
+                [
+                    "cloudflared",
+                    "tunnel",
+                    "--url",
+                    f"localhost:{port}",
+                    "--logfile",
+                    tmp.name,
+                ],
+                close_fds=True,
+                stdin=gevent.subprocess.DEVNULL,
+                stdout=gevent.subprocess.DEVNULL,
+                stderr=gevent.subprocess.DEVNULL,
+            )
             while True:
                 try:
-                    cloudflared_url = [_ for _ in open(tmp.name).read().split() if _.startswith("https://") and _.endswith(".trycloudflare.com")][0]
+                    cloudflared_url = [
+                        _
+                        for _ in open(tmp.name).read().split()
+                        if _.startswith("https://") and _.endswith(".trycloudflare.com")
+                    ][0]
                     break
                 except:
                     pass
@@ -193,11 +221,21 @@ def _main(
         for snic in snics:
             if snic.family == socket.AF_INET:
                 rich.print(f"http://{snic.address}:{port}")
-    
+
+    def handle_exit(*args):
+        if cloudflared_process is not None:
+            logging.info(f"Stopping tunnel")
+            cloudflared_process.kill()
+
+    atexit.register(handle_exit)
+    signal.signal(signal.SIGTERM, handle_exit)
+    signal.signal(signal.SIGINT, handle_exit)
+
     if cloudflared_url:
         rich.print(cloudflared_url)
 
     StandaloneApplication(app, options).run()
+
 
 def batserve():
     logging.info(f"[yellow]Starting[/yellow] batServe")
@@ -212,5 +250,6 @@ def batserve():
         password=args.password,
     )
 
+
 if __name__ == "__main__":
-    main()    
+    main()
