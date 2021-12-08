@@ -67,7 +67,6 @@ import sys
 import glob
 import time
 import uuid
-import epyk
 import atexit
 import falcon
 import signal
@@ -77,6 +76,7 @@ import psutil
 import socket
 import logging
 import tempfile
+import datetime
 import mimetypes
 import gunicorn.app.base
 from rich.logging import RichHandler
@@ -103,14 +103,23 @@ class fileServer(object):
                     resp.stream = open(os.path.join(in_path, "index.html"), "rb")
                 elif self.no_index:
                     resp.media = (
-                        "inde.html doesn't exist and auto-generation is disabled"
+                        "index.html doesn't exist and auto-generation is disabled"
                     )
                     resp.status = falcon.HTTP_404
                 else:
-                    # index_page = epyk.Page()
+                    html_rows = [
+                        f"<tr> <td> <b> File </b> </td> <td> <b> Size (MB) </b> </td> <td> <b> Last Updated (y-m-d-h:m:s) </b> </td> </tr>"
+                    ]
                     for f in glob.iglob(os.path.join(in_path, "*")):
-                        pass
-                    resp.media = glob.glob(os.path.join(in_path, "*"))
+                        stats = os.stat(f)
+                        is_file = os.path.isfile(f)
+                        f = os.path.relpath(f, self.dir)
+                        html_rows.append(
+                            f'<tr> <td> <a href="{f}">{os.path.basename(f)}</a> </td> <td> {round(stats.st_size/(1024 * 1024), 6) if is_file else "Directory"}  </td> <td> {datetime.datetime.fromtimestamp(stats.st_mtime).strftime("%Y-%m-%d-%H:%M:%S")} </td> </tr>'
+                        )
+
+                    resp.content_type = "text/html"
+                    resp.text = f"<!DOCTYPE html> <html> <body> <h2>Files:</h2> <table style='border-spacing: 0 1em;width:80%;margin-left:auto;margin-right:auto'> {' '.join(html_rows)} </table> </body> </html>"
 
             else:
                 if not os.path.exists(in_path):
