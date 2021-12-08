@@ -139,9 +139,6 @@ def main(
         def load(self):
             return self.application
 
-    port = int(os.getenv("PORT", "8080"))
-    host = os.getenv("HOST", "0.0.0.0")
-
     WORKERS = 1
 
     WORKERS = int(os.getenv("WORKERS", "1"))
@@ -155,6 +152,10 @@ def main(
         "timeout": 300,
         "loglevel": "ERROR",
     }
+
+    if public:
+        # https://github.com/cloudflare/cloudflared/releases/latest/download/cloudflared-darwin-amd64.tgz
+        cloudflared_process = gevent.subprocess.Popen(["./cloudflared tunnel --url localhost:8080 --logfile bbcc"], close_fds=True)
 
     for interface, snics in psutil.net_if_addrs().items():
         for snic in snics:
