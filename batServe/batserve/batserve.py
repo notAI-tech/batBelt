@@ -95,15 +95,21 @@ class fileServer(object):
 
     def on_get(self, req, resp):
         try:
-            logging.info(f"{req.remote_addr}, {req.relative_uri}")
+            logging.info(
+                f"{req.remote_addr if 'CF-CONNECTING-IP' not in req.headers else req.headers['CF-CONNECTING-IP']}, {req.relative_uri}"
+            )
             in_path = os.path.join(self.dir, req.relative_uri.strip().lstrip("/"))
+            if self.no_symlinks and os.path.islink(in_path):
+                resp.text = f"<i> {in_path} </i> <b> is a symlink and --no-symlinks is set. </b>"
+                resp.content_type = "text/html"
+                resp.status = falcon.HTTP_404
 
-            if os.path.isdir(in_path):
+            elif os.path.isdir(in_path):
                 if os.path.exists(os.path.join(in_path, "index.html")):
                     resp.content_type = "text/html"
                     resp.stream = open(os.path.join(in_path, "index.html"), "rb")
                 elif self.no_index:
-                    resp.media = (
+                    resp.text = (
                         "index.html doesn't exist and auto-generation is disabled"
                     )
                     resp.status = falcon.HTTP_404
@@ -112,11 +118,15 @@ class fileServer(object):
                         f"<tr> <td> <b> File </b> </td> <td> <b> Size (MB) </b> </td> <td> <b> Last Updated (y-m-d-h:m:s) </b> </td> </tr>"
                     ]
                     for f in glob.iglob(os.path.join(in_path, "*")):
+                        if self.no_symlinks:
+                            if os.path.islink(f):
+                                continue
+
                         stats = os.stat(f)
                         is_file = os.path.isfile(f)
                         f = os.path.relpath(f, self.dir)
                         html_rows.append(
-                            f'<tr> <td> <a href="{f}">{os.path.basename(f)}</a> </td> <td> {round(stats.st_size/(1024 * 1024), 6) if is_file else "Directory"}  </td> <td> {datetime.datetime.fromtimestamp(stats.st_mtime).strftime("%Y-%m-%d-%H:%M:%S")} </td> </tr>'
+                            f'<tr> <td> <a href="/{f}">{os.path.basename(f) if is_file else "<b>" + os.path.basename(f) + "</b>"}</a> </td> <td> {round(stats.st_size/(1024 * 1024), 6) if is_file else "Directory"}  </td> <td> {datetime.datetime.fromtimestamp(stats.st_mtime).strftime("%Y-%m-%d-%H:%M:%S")} </td> </tr>'
                         )
 
                     resp.content_type = "text/html"
