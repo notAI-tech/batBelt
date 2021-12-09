@@ -9,7 +9,7 @@ def get_args():
             rich.print(message)
 
     parser = ArgumentParser(
-        description="[green]batBelt[/green] file server - simple and useful file server"
+        description="[green]batBelt[/green] file server (1.0-rc4) - simple and useful file server"
     )
     parser.add_argument(
         "--host",
