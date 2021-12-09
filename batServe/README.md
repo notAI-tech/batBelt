@@ -6,12 +6,16 @@
 
 **Installation**:
 
-```curl https://raw.githubusercontent.com/notAI-tech/batBelt/main/batServe/batserve.sh | bash```
+- If you have python >= 3.6 installed and want to install batServe only
+
+```pip install --upgrade batserve```
+
+- If you don't have python pre-installed, batServe is available as a pre-built binary via batBelt
 
 **Usage**:
 
 ```
-usage: batserve (optional arguments)
+usage: batserve (or) python -m batserve (optional arguments)
 
 batBelt file server (1.0-rc4) - simple and useful file server
 
