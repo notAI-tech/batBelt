@@ -79,6 +79,7 @@ import logging
 import tempfile
 import datetime
 import mimetypes
+import falcon_auth2
 import gunicorn.app.base
 from rich.logging import RichHandler
 
@@ -164,11 +165,18 @@ def _main(
     app = falcon.App(cors_enable=True)
     app.req_options.auto_parse_form_urlencoded = True
     ALLOWED_ORIGINS = os.getenv("ALLOWED_ORIGINS", "*")
-    app = falcon.App(
-        middleware=falcon.CORSMiddleware(
-            allow_origins=ALLOWED_ORIGINS, allow_credentials=ALLOWED_ORIGINS
-        )
-    )
+    def __authenticate(attributes, _username, _password):
+        print('==============')
+        if username is None:
+            return {"username": _username}
+        if _username == username and _password == password:
+            return {"username": _username}
+        return None
+
+    kkk = falcon_auth2.backends.BasicAuthBackend(__authenticate)
+    aaa = falcon_auth2.AuthMiddleware(kkk)
+    # app = falcon.App(middleware=[aaa, falcon.CORSMiddleware(allow_origins=ALLOWED_ORIGINS, allow_credentials=ALLOWED_ORIGINS)])
+    app = falcon.App(middleware=aaa)
 
     file_server_api = fileServer(dir=dir, no_index=no_index, no_symlinks=no_symlinks)
 
@@ -202,7 +210,7 @@ def _main(
         "workers": WORKERS,
         "worker_connections": 1000,
         "worker_class": "gevent",
-        "timeout": 300,
+        "timeout": 0,
         "loglevel": "ERROR",
     }
 
