@@ -1,9 +1,6 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-# Note: To use the 'upload' functionality of this file, you must:
-#   $ pip install twine
-
 import io
 import os
 import sys
@@ -13,7 +10,7 @@ from setuptools import find_packages, setup, Command
 
 # Package meta-data.
 NAME = "batServe"
-DESCRIPTION = "simple, useful file server | part of batBelt"
+DESCRIPTION = "Simple file server and reverse proxy | part of batBelt"
 URL = "https://github.com/notAI-tech/batBelt"
 EMAIL = "praneeth@bpraneeth.com"
 AUTHOR = "BEDAPUDI PRANEETH"
