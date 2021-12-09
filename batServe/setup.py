@@ -15,7 +15,7 @@ URL = "https://github.com/notAI-tech/batBelt"
 EMAIL = "praneeth@bpraneeth.com"
 AUTHOR = "BEDAPUDI PRANEETH"
 REQUIRES_PYTHON = ">=3.6.0"
-VERSION = "1.0-rc5"
+VERSION = "1.0-rc6"
 
 # What packages are required for this module to be executed?
 REQUIRED = ["psutil", "falcon", "gevent", "gunicorn", "rich"]
