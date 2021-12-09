@@ -9,7 +9,6 @@ import sys
 import glob
 import time
 import uuid
-import epyk
 import falcon
 import gevent
 import shutil
