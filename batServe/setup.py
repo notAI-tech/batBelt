@@ -13,7 +13,7 @@ from setuptools import find_packages, setup, Command
 
 # Package meta-data.
 NAME = "batServe"
-DESCRIPTION = "simple, useful file server | part of batBelt"
+DESCRIPTION = "Simple file server and reverse proxy | part of batBelt"
 URL = "https://github.com/notAI-tech/batBelt"
 EMAIL = "praneeth@bpraneeth.com"
 AUTHOR = "BEDAPUDI PRANEETH"
