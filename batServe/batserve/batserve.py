@@ -9,7 +9,7 @@ def get_args():
             rich.print(message)
 
     parser = ArgumentParser(
-        description="[green]batBelt[/green] file server (1.0-rc4) - simple and useful file server"
+        description="[green]batBelt[/green] file server (1.0-rc5) - simple and useful file server"
     )
     parser.add_argument(
         "--host",
@@ -67,6 +67,7 @@ import sys
 import glob
 import time
 import uuid
+import time
 import atexit
 import falcon
 import signal
@@ -215,7 +216,23 @@ def _main(
                 stdout=gevent.subprocess.DEVNULL,
                 stderr=gevent.subprocess.DEVNULL,
             )
+            loop_start = time.time()
             while True:
+                if time.time() - loop_start >= 15:
+                    logging.warning(f"Establishing a tunnel connection failed.")
+                    logging.warning(
+                        f"Try manually running the following command in a separate terminal."
+                    )
+                    logging.warning(
+                        " ".join(
+                            ["cloudflared", "tunnel", "--url", f"localhost:{port}"]
+                        )
+                    )
+                    try:
+                        cloudflared_process.kill()
+                    except:
+                        pass
+                    break
                 try:
                     cloudflared_url = [
                         _
@@ -224,6 +241,7 @@ def _main(
                     ][0]
                     break
                 except:
+                    time.sleep(1)
                     pass
 
     for interface, snics in psutil.net_if_addrs().items():
