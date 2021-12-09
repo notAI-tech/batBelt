@@ -4,3 +4,6 @@
 </p>
 
 
+**Installation**:
+
+```curl https://raw.githubusercontent.com/notAI-tech/batBelt/main/batServe/batserve.sh | bash```
