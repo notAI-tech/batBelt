@@ -64,21 +64,21 @@ def make_exe():
 
     # Toggle whether Python module source code for modules in the Python
     # distribution's standard library are included.
-    # policy.include_distribution_sources = False
+    policy.include_distribution_sources = True
 
     # Toggle whether Python package resource files for the Python standard
     # library are included.
-    # policy.include_distribution_resources = False
+    policy.include_distribution_resources = False
 
     # Controls the `add_include` attribute of `File` resources.
     # policy.include_file_resources = False
 
     # Controls the `add_include` attribute of `PythonModuleSource` not in
     # the standard library.
-    # policy.include_non_distribution_sources = True
+    policy.include_non_distribution_sources = False
 
     # Toggle whether files associated with tests are included.
-    # policy.include_test = False
+    policy.include_test = False
 
     # Resources are loaded from "in-memory" or "filesystem-relative" paths.
     # The locations to attempt to add resources to are defined by the
@@ -87,14 +87,14 @@ def make_exe():
     # an optional fallback.
 
     # Use in-memory location for adding resources by default.
-    # policy.resources_location = "in-memory"
+    policy.resources_location = "in-memory"
 
     # Use filesystem-relative location for adding resources by default.
-    # policy.resources_location = "filesystem-relative:prefix"
+    # policy.resources_location = "filesystem-relative:batbelt_libs"
 
     # Attempt to add resources relative to the built binary when
     # `resources_location` fails.
-    # policy.resources_location_fallback = "filesystem-relative:prefix"
+    policy.resources_location_fallback = "filesystem-relative:batbelt_libs"
 
     # Clear out a fallback resource location.
     # policy.resources_location_fallback = None
@@ -190,7 +190,7 @@ def make_exe():
     # python_config.write_modules_directory_env = "/tmp/oxidized/loaded_modules"
 
     # Evaluate a string as Python code when the interpreter starts.
-    # python_config.run_command = "<code>"
+    python_config.run_command = "import sys;import rich\nif sys.argv[1:] and sys.argv[1] == 'serve': import batserve\nelse:rich.print('\t\t[green]Usage:[/green] batbelt serve\t\t')"
 
     # Run a Python module as __main__ when the interpreter starts.
     # python_config.run_module = "<module>"
@@ -245,7 +245,7 @@ def make_exe():
     # `add_python_resources()` adds these objects to the binary, with a load
     # location as defined by the packaging policy's resource location
     # attributes.
-    #exe.add_python_resources(exe.pip_install(["appdirs"]))
+    exe.add_python_resources(exe.pip_install(["batserve"]))
 
     # Invoke `pip install` using a requirements file and add the collected resources
     # to our binary.

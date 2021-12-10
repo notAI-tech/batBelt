@@ -14,7 +14,7 @@ elif [[ "$OSTYPE" == "darwin"* ]]; then
 
     echo "Downloading batServe"
 
-    wget https://github.com/notai-tech/batbelt/releases/latest/download/batserve-darwin-amd64.pex -O /usr/local/bin/batserve 2>/dev/null || curl -L -o /usr/local/bin/batserve https://github.com/notai-tech/batbelt/releases/latest/download/batserve-darwin-amd64.pex
+    wget https://github.com/notai-tech/batbelt/releases/latest/download/batbelt-darwin-amd64.tar -O /usr/local/bin/batserve 2>/dev/null || curl -L -o /usr/local/bin/batserve https://github.com/notai-tech/batbelt/releases/latest/download/batbelt-darwin-amd64.tar
 
     if [ ! -f /usr/local/bin/batserve ]; then
         echo "Downloading batserve failed. Your connection might be unstable, please try again later."
