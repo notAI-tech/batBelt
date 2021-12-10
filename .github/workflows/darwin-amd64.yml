@@ -42,12 +42,11 @@ jobs:
 
       - name: Upload Release Asset
         id: upload-release-asset
-        working-directory: batbelt
         uses: actions/upload-release-asset@v1
         env:
           GITHUB_TOKEN: ${{ secrets.GIT_TOKEN }}
         with:
           upload_url: ${{ steps.create_release.outputs.upload_url }}
-          asset_path: ./batbelt-darwin-amd64.tar
+          asset_path: ./batbelt/batbelt-darwin-amd64.tar
           asset_name: batbelt-darwin-amd64.tar
           asset_content_type: application/x-tar
