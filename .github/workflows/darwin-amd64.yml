@@ -1,0 +1,52 @@
+name: Build and release batServe
+
+on:
+  push:
+    tags:
+      - v*
+
+jobs:
+  release-binary:
+    name: Release batBelt Binary.
+    runs-on: macos-11
+
+    steps:
+      - uses: actions/checkout@v2
+      - uses: actions/setup-python@v1
+        with:
+          python-version: 3.8
+          architecture: 'x64'
+
+      - name: build and test batBelt
+        working-directory: batbelt
+        run: |
+          pip install pyoxidizer
+          pyoxidizer build --release install
+          cd ./build/x86*/release/
+          mv install batbelt-darwin-amd64
+          tar -czf batbelt-darwin-amd64.tar batbelt-darwin-amd64
+          mv batbelt-darwin-amd64.tar ../../../
+          ./batbelt-darwin-amd64/batbelt
+          ./batbelt-darwin-amd64/batbelt serve --help
+
+      - name: Create Release
+        id: create_release
+        uses: actions/create-release@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tag_name: ${{ github.ref }}
+          release_name: Release ${{ github.ref }}
+          draft: false
+          prerelease: false
+
+      - name: Upload Release Asset
+        id: upload-release-asset
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GIT_TOKEN }}
+        with:
+          upload_url: ${{ steps.create_release.outputs.upload_url }}
+          asset_path: ./batbelt-darwin-amd64.tar
+          asset_name: batbelt-darwin-amd64.tar
+          asset_content_type: application/x-tar
