@@ -6,9 +6,6 @@ batBelt is a collection of nifty utilities (file server with tunneling, reverse 
 
 ```curl https://raw.githubusercontent.com/notAI-tech/batBelt/main/batbelt.install.sh | bash```
 
-- Components under batbelt can be installed individually
-- batServe - https://github.com/notAI-tech/batBelt/tree/main/batServe
-
 **Usage**
 
 ```bash
@@ -21,3 +18,8 @@ batbelt get --help
 # Use batMove (fast and helpful file mover, renamer ..)
 batbelt move --help
 ```
+
+**Notes**
+
+- Components under batbelt can be installed individually
+- batServe - https://github.com/notAI-tech/batBelt/tree/main/batServe
