@@ -24,6 +24,11 @@ elif [[ "$OSTYPE" == "darwin"* ]]; then
     fi
 
     tar -xf batbelt-darwin-amd64.tar
+    
+    if [ -d /usr/local/bin/batbelt_libs ]; then
+        rm -rf /usr/local/bin/batbelt_libs
+    fi
+
     mv batbelt-darwin-amd64/* /usr/local/bin/
     rm -rf batbelt-darwin-amd64 batbelt-darwin-amd64.tar
 
