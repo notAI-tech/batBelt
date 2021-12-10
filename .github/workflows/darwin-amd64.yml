@@ -1,4 +1,4 @@
-name: Build and release batServe
+name: Build and release batBelt - Darwin
 
 on:
   push:
