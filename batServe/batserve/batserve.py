@@ -88,6 +88,16 @@ logging.basicConfig(
 )
 
 
+class routingMiddleware:
+    def __init__(self, proxy_prefixes=[]):
+        self.proxy_routes = set(proxy_prefixes)
+
+    def process_request(self, req, resp):
+        if req.path.lstrip("/").split("/", 1)[0] not in self.proxy_routes:
+            req.params["file_path"] = req.path.lstrip("/")
+            req.path = "/"
+
+
 class fileServer(object):
     def __init__(self, dir, no_index, no_symlinks):
         self.dir = dir
@@ -96,10 +106,11 @@ class fileServer(object):
 
     def on_get(self, req, resp):
         try:
+            in_path = os.path.join(self.dir, req.params["file_path"])
+
             logging.info(
-                f"{req.remote_addr if 'CF-CONNECTING-IP' not in req.headers else req.headers['CF-CONNECTING-IP']}, {req.relative_uri}"
+                f"{req.remote_addr if 'CF-CONNECTING-IP' not in req.headers else req.headers['CF-CONNECTING-IP']}, {'/' if not req.params['file_path'] else req.params['file_path']}"
             )
-            in_path = os.path.join(self.dir, req.relative_uri.strip().lstrip("/"))
             if self.no_symlinks and os.path.islink(in_path):
                 resp.text = f"<i> {in_path} </i> <b> is a symlink and --no-symlinks is set. </b>"
                 resp.content_type = "text/html"
@@ -165,22 +176,38 @@ def _main(
     app = falcon.App(cors_enable=True)
     app.req_options.auto_parse_form_urlencoded = True
     ALLOWED_ORIGINS = os.getenv("ALLOWED_ORIGINS", "*")
-    def __authenticate(attributes, _username, _password):
-        print('==============')
-        if username is None:
-            return {"username": _username}
-        if _username == username and _password == password:
-            return {"username": _username}
-        return None
 
-    kkk = falcon_auth2.backends.BasicAuthBackend(__authenticate)
-    aaa = falcon_auth2.AuthMiddleware(kkk)
-    # app = falcon.App(middleware=[aaa, falcon.CORSMiddleware(allow_origins=ALLOWED_ORIGINS, allow_credentials=ALLOWED_ORIGINS)])
-    app = falcon.App(middleware=aaa)
+    if username and password:
+
+        def __authenticate(attributes, _username, _password):
+            if _username == username and _password == password:
+                return {"username": _username}
+            return None
+
+        app = falcon.App(
+            middleware=[
+                falcon_auth2.AuthMiddleware(
+                    falcon_auth2.backends.BasicAuthBackend(__authenticate)
+                ),
+                falcon.CORSMiddleware(
+                    allow_origins=ALLOWED_ORIGINS, allow_credentials=ALLOWED_ORIGINS
+                ),
+                routingMiddleware(),
+            ]
+        )
+    else:
+        app = falcon.App(
+            middleware=[
+                falcon.CORSMiddleware(
+                    allow_origins=ALLOWED_ORIGINS, allow_credentials=ALLOWED_ORIGINS
+                ),
+                routingMiddleware(),
+            ]
+        )
 
     file_server_api = fileServer(dir=dir, no_index=no_index, no_symlinks=no_symlinks)
 
-    app.add_sink(file_server_api.on_get, prefix="/")
+    app.add_route("/", file_server_api)
 
     class StandaloneApplication(gunicorn.app.base.BaseApplication):
         def __init__(self, app, options=None):
@@ -265,7 +292,10 @@ def _main(
     for interface, snics in psutil.net_if_addrs().items():
         for snic in snics:
             if snic.family == socket.AF_INET:
-                rich.print(f"http://{snic.address}:{port}")
+                if username and password:
+                    rich.print(f"http://{username}:{password}@{snic.address}:{port}")
+                else:
+                    rich.print(f"http://{snic.address}:{port}")
 
     def handle_exit(*args):
         if cloudflared_process is not None:
