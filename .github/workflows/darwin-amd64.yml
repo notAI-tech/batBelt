@@ -7,7 +7,7 @@ on:
 
 jobs:
   release-binary:
-    name: Release batBelt mac binary.
+    name: Release batBelt mac binary
     runs-on: macos-11
 
     steps:
