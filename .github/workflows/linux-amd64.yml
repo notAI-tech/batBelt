@@ -7,7 +7,7 @@ on:
 
 jobs:
   release-binary:
-    name: Release batBelt Binary.
+    name: Release batBelt linux binary
     runs-on: ubuntu-latest
 
     steps:
@@ -39,15 +39,14 @@ jobs:
           release_name: Release ${{ github.ref }}
           draft: false
           prerelease: false
-
-      - name: Upload Release Asset
+      
+      - name: Upload linux binary to release
         if: always()
-        id: upload-release-asset
-        uses: actions/upload-release-asset@v1
-        env:
-          GITHUB_TOKEN: ${{ secrets.GIT_TOKEN }}
+        uses: svenstaro/upload-release-action@v2
         with:
-          upload_url: ${{ steps.create_release.outputs.upload_url }}
-          asset_path: ./batbelt/batbelt-linux-amd64.tar
+          repo_token: ${{ secrets.GIT_TOKEN }}
+          file: ./batbelt/batbelt-linux-amd64.tar
           asset_name: batbelt-linux-amd64.tar
-          asset_content_type: application/x-tar
+          tag: ${{ github.ref }}
+          overwrite: true
+          
